@@ -10,7 +10,7 @@ import type {
   IStyledNativeStatics,
   NativeTarget,
   RuleSet,
-  StyledNativeOptions,
+  StyledNativeOptions
 } from '../types';
 import determineTheme from '../utils/determineTheme';
 import { EMPTY_ARRAY, EMPTY_OBJECT } from '../utils/empties';
@@ -145,9 +145,9 @@ export default (InlineStyle: IInlineStyleConstructor<any>) => {
       }
     }
 
-    const forwardRef = (props: ExtensibleObject & OuterProps, ref: React.Ref<any>) =>
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      useStyledComponentImpl<Target, OuterProps>(WrappedStyledComponent, props, ref);
+    const forwardRef =  (props: ExtensibleObject & OuterProps, ref?: React.Ref<any> | undefined) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useStyledComponentImpl<Target, OuterProps>(WrappedStyledComponent, props, ref)
 
     forwardRef.displayName = displayName;
 
@@ -155,17 +155,28 @@ export default (InlineStyle: IInlineStyleConstructor<any>) => {
      * forwardRef creates a new interim component, which we'll take advantage of
      * instead of extending ParentComponent to create _another_ interim class
      */
-    let WrappedStyledComponent = React.forwardRef(forwardRef) as unknown as IStyledNativeComponent<
+    let WrappedStyledComponent: IStyledNativeComponent<
       Target,
       OuterProps
     > &
       Statics;
 
+      if (options.enableRef) {
+        const ComponentWithRef = React.forwardRef(forwardRef);
+        ComponentWithRef.displayName = displayName;
+        WrappedStyledComponent  = ComponentWithRef;
+      } else {
+        WrappedStyledComponent = forwardRef as unknown as IStyledNativeComponent<
+        Target,
+        OuterProps
+      > &
+        Statics;
+      }
+
     WrappedStyledComponent.attrs = finalAttrs;
     WrappedStyledComponent.inlineStyle = new InlineStyle(
       isTargetStyledComp ? styledComponentTarget.inlineStyle.rules.concat(rules) : rules
     ) as InstanceType<IInlineStyleConstructor<OuterProps>>;
-    WrappedStyledComponent.displayName = displayName;
     WrappedStyledComponent.shouldForwardProp = shouldForwardProp;
 
     // @ts-expect-error we don't actually need this for anything other than detection of a styled-component

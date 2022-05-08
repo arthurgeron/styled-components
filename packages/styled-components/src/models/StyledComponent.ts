@@ -12,7 +12,7 @@ import type {
   IStyledStatics,
   RuleSet,
   StyledOptions,
-  WebTarget,
+  WebTarget
 } from '../types';
 import { checkDynamicCreation } from '../utils/checkDynamicCreation';
 import createWarnTooManyClasses from '../utils/createWarnTooManyClasses';
@@ -236,7 +236,7 @@ function createStyledComponent<Target extends WebTarget, OuterProps = unknown, S
   // statically styled-components don't need to build an execution context object,
   // and shouldn't be increasing the number of class names
   const isStatic = componentStyle.isStatic && attrs.length === 0;
-  function forwardRef(props: ExtensibleObject & OuterProps, ref: Ref<Element>) {
+  function forwardRef(props: ExtensibleObject & OuterProps, ref?: Ref<Element>) {
     // eslint-disable-next-line
     return useStyledComponentImpl<Target, OuterProps>(WrappedStyledComponent, props, ref, isStatic);
   }
@@ -247,14 +247,26 @@ function createStyledComponent<Target extends WebTarget, OuterProps = unknown, S
    * forwardRef creates a new interim component, which we'll take advantage of
    * instead of extending ParentComponent to create _another_ interim class
    */
-  let WrappedStyledComponent = React.forwardRef(forwardRef) as unknown as IStyledComponent<
+  let WrappedStyledComponent: IStyledComponent<
     typeof target,
     OuterProps
   > &
     Statics;
+
+  if (options.enableRef) {
+    const ComponentWithRef = React.forwardRef(forwardRef);
+    ComponentWithRef.displayName = displayName;
+    WrappedStyledComponent = ComponentWithRef;
+  } else {
+    WrappedStyledComponent = forwardRef as unknown as  IStyledComponent<
+    typeof target,
+    OuterProps
+  > &
+    Statics;
+  }
+
   WrappedStyledComponent.attrs = finalAttrs;
   WrappedStyledComponent.componentStyle = componentStyle;
-  WrappedStyledComponent.displayName = displayName;
   WrappedStyledComponent.shouldForwardProp = shouldForwardProp;
 
   // this static is used to preserve the cascade of static classes for component selector

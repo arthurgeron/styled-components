@@ -18,12 +18,14 @@ export interface StyledOptions<Props> {
   displayName?: string;
   parentComponentId?: string;
   shouldForwardProp?: ShouldForwardProp;
+  enableRef?: boolean;
 }
 
 export interface StyledNativeOptions<Props> {
   attrs?: Attrs<Props>[];
   displayName?: string;
   shouldForwardProp?: ShouldForwardProp;
+  enableRef?: boolean;
 }
 
 export type KnownWebTarget = keyof JSX.IntrinsicElements | AnyComponent;
